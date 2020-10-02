@@ -7,7 +7,6 @@ import schedule
 from threading import Timer
 from telebot import types
 bot=telebot.TeleBot(config.TOKEN)
-#bot=telebot.AsyncTeleBot(TOKEN)
 connLocal = sqlite3.connect("not_mat_database.db", check_same_thread=False)
 curLocal = connLocal.cursor() # Создаем курсор в бд
 curLocal.execute("CREATE TABLE IF NOT EXISTS Settings_Not_Mat (ChatID int8 NOT NULL, Check_Mat boolean)")
@@ -137,14 +136,19 @@ def DelMat(message):
 @bot.message_handler(commands=['listmat'])
 def ListMat(message):
   registration(message)
-  curLocal = connLocal.cursor() # Создаем курсор в бд
-  curLocal.execute("SELECT * FROM Data_List_Not_Mat")
-  results = curLocal.fetchall()
-  Line="Сейчас я знаю такие маты: "
-  for row in results:
-    Line+="".join(row)+", "
-  bot.send_message(message.chat.id, Line)
-  curLocal.close() #Удаляем указатель
+  try:
+    curLocal = connLocal.cursor() # Создаем курсор в бд
+    curLocal.execute("SELECT * FROM Data_List_Not_Mat")
+    results = curLocal.fetchall()
+    Line="Сейчас я знаю такие маты: "
+    for row in results:
+      Line+="".join(row)+", "
+    bot.send_message(message.chat.id, Line)
+    curLocal.close() #Удаляем указатель
+  except:
+    # Если БД не существует, то отправляем сообщение
+    bot.send_message(message.chat.id, "Хм, видимо кто то удалил мою базу с матами")
+
 
 @bot.message_handler(commands=['getbd'])
 def GetBD(message):
